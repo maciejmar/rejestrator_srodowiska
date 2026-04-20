@@ -1,0 +1,215 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal scale-in" (click)="$event.stopPropagation()">
+
+    <!-- Success -->
+    <div *ngIf="success" class="modal__success">
+      <div class="success-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h3>Rezerwacja potwierdzona!</h3>
+      <p>Twoja rezerwacja została zapisana pomyślnie.</p>
+    </div>
+
+    <ng-container *ngIf="!success">
+
+      <!-- Header -->
+      <div class="modal__header">
+        <div class="modal__header-info">
+          <h2 class="modal__title">{{ model.name }}</h2>
+          <p class="modal__date">{{ dateLabel }}</p>
+        </div>
+        <button class="modal__close" (click)="close()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mode bar -->
+      <div class="modal__mode-bar">
+        <button class="mode-btn" [class.mode-btn--active]="mode === 'full-day'"
+          [disabled]="isFullDayTaken" (click)="setMode('full-day')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Cały dzień
+          <span class="mode-btn__badge" *ngIf="isFullDayTaken">Zajęty</span>
+        </button>
+        <button class="mode-btn" [class.mode-btn--active]="mode === 'hourly'" (click)="setMode('hourly')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Godzinowo
+        </button>
+
+        <!-- Admin badge -->
+        <span class="admin-badge" *ngIf="auth.isAdmin">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Tryb admina
+        </span>
+      </div>
+
+      <div class="modal__body">
+
+        <!-- Existing reservations (admin can cancel them) -->
+        <div *ngIf="existingReservations.length > 0" class="existing-section">
+          <div class="existing-section__title">
+            Bieżące rezerwacje
+            <span class="existing-section__hint" *ngIf="!auth.isAdmin">(tylko odczyt)</span>
+          </div>
+          <div class="existing-list">
+            <div class="existing-item" *ngFor="let r of existingReservations">
+              <div class="existing-item__time">
+                {{ r.isFullDay ? 'Cały dzień' : r.startTime + ' – ' + r.endTime }}
+              </div>
+              <div class="existing-item__user">{{ r.userName }}</div>
+              <div class="existing-item__dept">{{ r.department }}</div>
+              <button
+                *ngIf="auth.isAdmin"
+                class="cancel-btn"
+                (click)="cancelExisting(r)"
+                title="Anuluj rezerwację"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full-day info -->
+        <div *ngIf="mode === 'full-day' && !isFullDayTaken" class="full-day-info">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          Rezerwujesz dostęp do modelu na <strong>cały dzień roboczy</strong> (08:00–20:00).
+        </div>
+
+        <!-- Time slots -->
+        <div *ngIf="mode === 'hourly'" class="time-slots-section">
+          <div class="time-slots-header">
+            <span class="time-slots-label">Wybierz godziny</span>
+            <div class="time-slots-actions">
+              <button class="btn btn--sm btn--secondary" (click)="selectAllAvailable()">Zaznacz wolne</button>
+              <button class="btn btn--sm btn--ghost" (click)="clearSelection()">Wyczyść</button>
+            </div>
+          </div>
+
+          <div class="time-slots">
+            <div *ngFor="let slot of timeSlots"
+              class="time-slot"
+              [class.time-slot--available]="slot.isAvailable"
+              [class.time-slot--taken]="!slot.isAvailable"
+              [class.time-slot--selected]="slot.isSelected"
+              (click)="toggleSlot(slot)"
+            >
+              <span class="time-slot__hour">{{ slot.time }}</span>
+              <div class="time-slot__status">
+                <ng-container *ngIf="slot.isAvailable">
+                  <div class="time-slot__check" *ngIf="slot.isSelected">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                  <span class="time-slot__free-label" *ngIf="!slot.isSelected">Wolny</span>
+                </ng-container>
+                <ng-container *ngIf="!slot.isAvailable">
+                  <span class="time-slot__user" [title]="slot.department ?? ''">{{ slot.userName }}</span>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+
+          <div class="selected-summary" *ngIf="selectedSlots.length > 0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Wybrano: {{ selectedSlots.length }} {{ selectedSlots.length === 1 ? 'godzinę' : 'godziny/godzin' }}
+            &nbsp;·&nbsp; {{ selectedSlots[0].time }} – {{ selectedSlots[selectedSlots.length - 1].time }}
+          </div>
+        </div>
+
+        <!-- Full-day conflict -->
+        <div *ngIf="isFullDayTaken" class="existing-res-info">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div>
+            <strong>Cały dzień zarezerwowany</strong>
+            przez {{ existingReservations[0]?.userName }} ({{ existingReservations[0]?.department }})
+            <span *ngIf="auth.isAdmin"> — anuluj powyżej, aby odblokować.</span>
+          </div>
+        </div>
+
+        <!-- Reservation form -->
+        <form [formGroup]="form" (ngSubmit)="submit()" class="res-form">
+          <div class="res-form__fields">
+
+            <div class="form-group">
+              <label for="userName">
+                Imię i nazwisko *
+                <span class="field-hint" *ngIf="auth.isAdmin">(możesz zmienić — rezerwujesz w imieniu innej osoby)</span>
+              </label>
+              <input
+                id="userName"
+                type="text"
+                formControlName="userName"
+                placeholder="np. Jan Kowalski"
+                [attr.readonly]="!auth.isAdmin ? true : null"
+              />
+              <span class="error-msg" *ngIf="fieldError('userName')">Wymagane (min. 3 znaki)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="department">Departament / Dział *</label>
+              <input
+                id="department"
+                type="text"
+                formControlName="department"
+                placeholder="np. Departament Ryzyka"
+              />
+              <span class="error-msg" *ngIf="fieldError('department')">Pole wymagane</span>
+            </div>
+
+            <div class="form-group">
+              <label for="purpose">Cel rezerwacji *</label>
+              <textarea
+                id="purpose"
+                formControlName="purpose"
+                rows="2"
+                placeholder="Krótki opis zadania lub projektu..."
+              ></textarea>
+              <span class="error-msg" *ngIf="fieldError('purpose')">Wymagane (min. 5 znaków)</span>
+            </div>
+          </div>
+
+          <div class="res-form__footer">
+            <button type="button" class="btn btn--secondary" (click)="close()">Anuluj</button>
+            <button type="submit" class="btn btn--primary" [disabled]="!canSubmit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              </svg>
+              Zarezerwuj
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </ng-container>
+  </div>
+</div>

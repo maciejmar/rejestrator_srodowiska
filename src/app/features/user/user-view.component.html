@@ -1,0 +1,23 @@
+<div class="user-view">
+  <aside class="user-view__sidebar">
+    <app-model-list></app-model-list>
+  </aside>
+
+  <div class="user-view__content">
+    <app-calendar *ngIf="selectedModel; else noModel" [model]="selectedModel"></app-calendar>
+
+    <ng-template #noModel>
+      <div class="user-view__placeholder fade-in">
+        <div class="user-view__placeholder-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+        </div>
+        <h2>Wybierz model AI</h2>
+        <p>Kliknij na jeden z dostępnych modeli po lewej stronie, aby zobaczyć kalendarz dostępności i złożyć rezerwację.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

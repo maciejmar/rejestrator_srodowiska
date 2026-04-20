@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>Portal AI – Rezerwacja Modeli | BGK</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Spinner widoczny dopóki Angular nie wystartuje (APP_INITIALIZER) */
+    #app-loading {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #1b2838;
+      gap: 20px;
+      z-index: 9999;
+      transition: opacity .3s;
+    }
+    #app-loading img  { height: 48px; filter: brightness(0) invert(1); opacity: .85; }
+    #app-loading p    { font-family: Inter, sans-serif; font-size: 13px;
+                        color: rgba(255,255,255,.45); margin: 0; letter-spacing: .3px; }
+    .spin {
+      width: 32px; height: 32px;
+      border: 3px solid rgba(255,255,255,.12);
+      border-top-color: #c8102e;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Angular usuwa #app-loading gdy app-root zostanie wyrenderowany */
+    app-root:not(:empty) + #app-loading,
+    app-root:not(:empty) ~ #app-loading { display: none; }
+  </style>
+</head>
+<body>
+  <app-root></app-root>
+
+  <div id="app-loading">
+    <img src="assets/logo-bgk.svg" alt="BGK">
+    <div class="spin"></div>
+    <p>Weryfikacja sesji portalu…</p>
+  </div>
+</body>
+</html>

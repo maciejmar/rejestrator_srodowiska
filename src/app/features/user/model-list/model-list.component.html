@@ -1,0 +1,67 @@
+<div class="model-list">
+  <div class="model-list__header">
+    <h2 class="model-list__title">Modele AI</h2>
+    <p class="model-list__subtitle">{{ filteredModels.length }} dostępnych</p>
+  </div>
+
+  <div class="model-list__filters">
+    <button
+      *ngFor="let t of types"
+      class="filter-btn"
+      [class.filter-btn--active]="filterType === t.value"
+      (click)="filterType = t.value"
+    >{{ t.label }}</button>
+  </div>
+
+  <div class="model-list__items">
+    <div
+      *ngFor="let model of filteredModels"
+      class="model-card"
+      [class.model-card--selected]="isSelected(model)"
+      [class.model-card--maintenance]="model.status === 'maintenance'"
+      [class.model-card--busy]="model.status === 'busy'"
+      (click)="selectModel(model)"
+      [attr.role]="model.status !== 'maintenance' ? 'button' : null"
+      [attr.tabindex]="model.status !== 'maintenance' ? 0 : null"
+      (keydown.enter)="selectModel(model)"
+      (keydown.space)="selectModel(model)"
+    >
+      <div class="model-card__header">
+        <div class="model-card__icon">{{ typeIcon(model.type) }}</div>
+        <div class="model-card__meta">
+          <h3 class="model-card__name">{{ model.name }}</h3>
+          <span class="model-card__vendor" *ngIf="model.vendor">{{ model.vendor }}</span>
+        </div>
+        <div class="model-card__selected-icon" *ngIf="isSelected(model)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <p class="model-card__desc">{{ model.description }}</p>
+
+      <div class="model-card__footer">
+        <div class="model-card__tags">
+          <span class="tag tag--type">{{ model.type }}</span>
+          <span class="tag tag--params">{{ model.parameters }}</span>
+          <span class="tag tag--ctx" *ngIf="model.contextWindow">{{ model.contextWindow }} ctx</span>
+        </div>
+        <span class="badge badge--{{ model.status }}">
+          <span class="badge-dot"></span>
+          {{ statusLabel(model) }}
+        </span>
+      </div>
+
+      <div class="model-card__capacity" *ngIf="model.status !== 'maintenance'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        maks. {{ model.maxConcurrentUsers }} jednocześnie
+      </div>
+    </div>
+  </div>
+</div>

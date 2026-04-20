@@ -1,0 +1,201 @@
+/* ============================================
+   BGK AI Portal – Global Styles
+   ============================================ */
+
+// ---- Variables ----
+:root {
+  --bgk-gray:        #6b7a8d;
+  --bgk-gray-dark:   #3d4f61;
+  --bgk-red:         #c8102e;
+  --bgk-red-dark:    #a00d25;
+
+  --bg-main:         #f0f2f5;
+  --bg-card:         #ffffff;
+  --bg-navbar:       #1b2838;
+  --bg-navbar-hover: #253347;
+
+  --text-primary:    #1b2838;
+  --text-secondary:  #5b6b7c;
+  --text-muted:      #8fa0b3;
+  --text-light:      #ffffff;
+
+  --border-color:    #dde3eb;
+  --border-radius:   8px;
+  --border-radius-lg:12px;
+
+  --shadow-sm:       0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:       0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:       0 10px 30px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+
+  --status-available:        #16a34a;
+  --status-available-light:  #dcfce7;
+  --status-busy:             #dc2626;
+  --status-busy-light:       #fee2e2;
+  --status-maintenance:      #9333ea;
+  --status-maintenance-light:#f3e8ff;
+
+  --cal-available:   #f0fdf4;
+  --cal-low:         #d1fae5;
+  --cal-partial:     #fef3c7;
+  --cal-full:        #fee2e2;
+  --cal-today-border:#4285f4;
+  --cal-today-bg:    #eff6ff;
+  --cal-past-bg:     #f8f9fa;
+  --cal-past-text:   #b0bec5;
+  --cal-weekend-bg:  #fffbeb;
+
+  --modal-overlay:   rgba(15, 23, 42, .55);
+}
+
+// ---- Reset & Base ----
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+// ---- Utility Classes ----
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+
+  &--available { background: var(--status-available-light); color: var(--status-available); }
+  &--busy      { background: var(--status-busy-light);      color: var(--status-busy); }
+  &--maintenance { background: var(--status-maintenance-light); color: var(--status-maintenance); }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s ease;
+  text-decoration: none;
+
+  &--primary {
+    background: var(--bgk-red);
+    color: #fff;
+    &:hover:not(:disabled) { background: var(--bgk-red-dark); transform: translateY(-1px); }
+  }
+
+  &--secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    &:hover:not(:disabled) { background: var(--bg-main); }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--bgk-red);
+    &:hover:not(:disabled) { background: #fef2f2; }
+  }
+
+  &--sm { padding: 5px 12px; font-size: 13px; }
+  &--lg { padding: 11px 24px; font-size: 15px; }
+
+  &:disabled { opacity: .45; cursor: not-allowed; }
+}
+
+// ---- Form Elements ----
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+
+  input, select, textarea {
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+
+    &:focus {
+      border-color: var(--bgk-red);
+      box-shadow: 0 0 0 3px rgba(200, 16, 46, .12);
+    }
+
+    &.ng-invalid.ng-touched {
+      border-color: var(--status-busy);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, .1);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 72px;
+  }
+}
+
+.error-msg {
+  font-size: 11px;
+  color: var(--status-busy);
+  margin-top: 2px;
+}
+
+// ---- Scrollbar ----
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+// ---- Animations ----
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.fade-in { animation: fadeIn .2s ease forwards; }
+.scale-in { animation: scaleIn .2s ease forwards; }

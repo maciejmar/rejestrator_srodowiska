@@ -1,0 +1,270 @@
+<div class="admin fade-in">
+
+  <!-- Page Header -->
+  <div class="admin__header">
+    <div>
+      <h1 class="admin__title">Panel administratora</h1>
+      <p class="admin__sub">Zalogowany jako <strong>{{ auth.currentUser?.displayName }}</strong> · {{ auth.currentUser?.email }}</p>
+    </div>
+    <button class="btn btn--primary" (click)="toggleNewForm()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      {{ showNewForm ? 'Anuluj' : 'Nowa rezerwacja' }}
+    </button>
+  </div>
+
+  <!-- New Reservation Form (Admin) -->
+  <div class="new-res-panel" *ngIf="showNewForm">
+    <div class="panel">
+      <div class="panel__header">
+        <h2 class="panel__title">Utwórz rezerwację w imieniu użytkownika</h2>
+      </div>
+
+      <div *ngIf="newSuccess" class="new-res-success">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle><polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        Rezerwacja zapisana pomyślnie!
+      </div>
+
+      <form *ngIf="!newSuccess" [formGroup]="newForm" (ngSubmit)="submitNew()" class="new-res-form">
+        <div class="new-res-form__row">
+          <div class="form-group">
+            <label>Model *</label>
+            <select formControlName="modelId">
+              <option value="">— wybierz model —</option>
+              <option *ngFor="let m of models" [value]="m.id"
+                [disabled]="m.status === 'maintenance'">
+                {{ m.name }} ({{ m.type }}){{ m.status === 'maintenance' ? ' – Konserwacja' : '' }}
+              </option>
+            </select>
+            <span class="error-msg" *ngIf="newFormFieldError('modelId')">Wybierz model</span>
+          </div>
+
+          <div class="form-group">
+            <label>Data *</label>
+            <input type="date" formControlName="date" [min]="minDate"
+              (change)="newSelectedSlots = []" />
+            <span class="error-msg" *ngIf="newFormFieldError('date')">Wybierz datę</span>
+          </div>
+
+          <div class="form-group">
+            <label>Imię i nazwisko użytkownika *</label>
+            <input type="text" formControlName="userName" placeholder="np. Jan Kowalski" />
+            <span class="error-msg" *ngIf="newFormFieldError('userName')">Wymagane</span>
+          </div>
+
+          <div class="form-group">
+            <label>Departament *</label>
+            <input type="text" formControlName="department" placeholder="np. Departament Ryzyka" />
+            <span class="error-msg" *ngIf="newFormFieldError('department')">Wymagane</span>
+          </div>
+
+          <div class="form-group form-group--full">
+            <label>Cel rezerwacji *</label>
+            <input type="text" formControlName="purpose" placeholder="Krótki opis..." />
+            <span class="error-msg" *ngIf="newFormFieldError('purpose')">Wymagane (min. 5 znaków)</span>
+          </div>
+        </div>
+
+        <!-- Mode -->
+        <div class="new-res-form__mode">
+          <button type="button" class="mode-btn" [class.mode-btn--active]="newMode === 'full-day'"
+            (click)="setNewMode('full-day')">Cały dzień</button>
+          <button type="button" class="mode-btn" [class.mode-btn--active]="newMode === 'hourly'"
+            (click)="setNewMode('hourly')">Godzinowo</button>
+
+          <span class="conflict-warn" *ngIf="newMode === 'full-day' && newTakenSlots.size > 0">
+            ⚠ Wybrany dzień ma już rezerwacje — wybierz inny lub przejdź na tryb godzinowy.
+          </span>
+        </div>
+
+        <!-- Hourly slots -->
+        <div *ngIf="newMode === 'hourly'" class="new-res-form__slots">
+          <div class="slots-mini">
+            <div *ngFor="let h of hours" class="slot-mini"
+              [class.slot-mini--taken]="newTakenSlots.has(h)"
+              [class.slot-mini--selected]="isNewSlotSelected(h)"
+              (click)="!newTakenSlots.has(h) && toggleNewSlot(h)">
+              {{ h }}
+            </div>
+          </div>
+          <p class="slots-hint">Wybrano: {{ newSelectedSlots.length }} godz.</p>
+        </div>
+
+        <div class="new-res-form__footer">
+          <button type="submit" class="btn btn--primary" [disabled]="!canSubmitNew">
+            Zapisz rezerwację
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="admin__stats">
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </div>
+      <div><div class="stat-card__val">{{ stats.total }}</div><div class="stat-card__label">Łączne rezerwacje</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div><div class="stat-card__val">{{ stats.confirmed }}</div><div class="stat-card__label">Potwierdzone</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--orange">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div><div class="stat-card__val">{{ stats.today }}</div><div class="stat-card__label">Dziś</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__icon stat-card__icon--red">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+      </div>
+      <div><div class="stat-card__val">{{ models.length }}</div><div class="stat-card__label">Modeli w systemie</div></div>
+    </div>
+  </div>
+
+  <div class="admin__grid">
+    <!-- Reservations Table -->
+    <div class="admin__main">
+      <div class="panel">
+        <div class="panel__header">
+          <h2 class="panel__title">Rezerwacje</h2>
+          <div class="panel__filters">
+            <input type="text" class="search-input" placeholder="Szukaj..." [(ngModel)]="searchQuery" />
+            <select class="filter-select" [(ngModel)]="filterModelId">
+              <option value="all">Wszystkie modele</option>
+              <option *ngFor="let m of models" [value]="m.id">{{ m.name }}</option>
+            </select>
+            <select class="filter-select" [(ngModel)]="filterStatus">
+              <option value="all">Wszystkie statusy</option>
+              <option value="confirmed">Potwierdzone</option>
+              <option value="pending">Oczekujące</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="res-table">
+            <thead>
+              <tr>
+                <th>Data / Godzina</th>
+                <th>Model</th>
+                <th>Użytkownik</th>
+                <th>Departament</th>
+                <th>Cel</th>
+                <th>Status</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of filteredReservations">
+                <td>
+                  <div class="date-cell">
+                    <span class="date-cell__day">{{ dateLabel(r.date) }}</span>
+                    <span class="date-cell__time">{{ timeLabel(r) }}</span>
+                  </div>
+                </td>
+                <td><span class="model-chip">{{ modelName(r.modelId) }}</span></td>
+                <td class="user-cell">
+                  <div class="avatar">{{ r.userName.charAt(0) }}</div>
+                  {{ r.userName }}
+                </td>
+                <td class="dept-cell">{{ r.department }}</td>
+                <td class="purpose-cell" [title]="r.purpose">{{ r.purpose }}</td>
+                <td>
+                  <span class="status-badge status-badge--{{ r.status }}">
+                    {{ r.status === 'confirmed' ? 'Potwierdzona' : 'Oczekuje' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <button class="icon-btn icon-btn--edit" (click)="openReschedule(r)" title="Przenieś rezerwację">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="icon-btn icon-btn--danger" (click)="cancel(r)" title="Anuluj rezerwację">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="filteredReservations.length === 0">
+                <td colspan="7" class="empty-row">Brak rezerwacji spełniających kryteria</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel__footer">{{ filteredReservations.length }} wyników</div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="admin__sidebar">
+      <div class="panel">
+        <div class="panel__header"><h2 class="panel__title">Najpopularniejsze modele</h2></div>
+        <div class="model-ranking">
+          <div class="model-rank-item" *ngFor="let item of topModels(); let i = index">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <div class="rank-info">
+              <span class="rank-name">{{ item.model.name }}</span>
+              <div class="rank-bar">
+                <div class="rank-bar__fill"
+                  [style.width.%]="(item.count / (topModels()[0]?.count || 1)) * 100"></div>
+              </div>
+            </div>
+            <span class="rank-count">{{ item.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__header"><h2 class="panel__title">Status modeli</h2></div>
+        <div class="models-status-list">
+          <div class="model-status-row" *ngFor="let m of models">
+            <div class="model-status-info">
+              <span class="model-status-name">{{ m.name }}</span>
+              <span class="model-status-type">{{ m.type }}</span>
+            </div>
+            <div class="status-dot-badge" [class]="'status-dot-badge--' + m.status">
+              <span class="dot"></span>
+              {{ m.status === 'available' ? 'Dostępny' : m.status === 'busy' ? 'Zajęty' : 'Konserwacja' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Reschedule Modal -->
+<app-reschedule-modal
+  *ngIf="rescheduleTarget"
+  [reservation]="rescheduleTarget"
+  (closed)="onRescheduleClosed()"
+  (updated)="onRescheduleUpdated()"
+></app-reschedule-modal>

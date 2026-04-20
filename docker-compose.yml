@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: portal-ai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       portalai
+      POSTGRES_USER:     portalai
+      POSTGRES_PASSWORD: portalai
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./backend/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    networks:
+      - internal
+
+  # ── FastAPI backend ───────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: portal-ai-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://portalai:portalai@db:5432/portalai
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    networks:
+      - internal
+      - nginx-proxy
+
+  # ── Angular frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: portal-ai-rezerwacje
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - nginx-proxy
+
+volumes:
+  pg_data:
+
+networks:
+  internal:
+    # Sieć wewnętrzna: frontend nie ma bezpośredniego dostępu do DB
+    driver: bridge
+  nginx-proxy:
+    external: true
+    name: nginx-proxy
