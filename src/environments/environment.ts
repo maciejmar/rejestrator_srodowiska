@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://10.112.32.19/api',
+  apiUrl: '/rezerwacje/api',
   appName: 'Portal AI – Rezerwacja Modeli',
 
   auth: {
