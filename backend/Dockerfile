@@ -5,6 +5,8 @@ WORKDIR /app
 COPY requirements.txt .
 
 RUN --mount=type=secret,id=pip_conf,dst=/etc/pip.conf \
+    --mount=type=secret,id=ca_cert,dst=/usr/local/share/ca-certificates/bank-jfrog-ca.crt \
+    update-ca-certificates && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY . .
