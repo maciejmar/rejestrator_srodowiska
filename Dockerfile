@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 RUN --mount=type=secret,id=ca_cert,dst=/etc/pki/ca-trust/source/anchors/bank-jfrog-ca.crt \
-    npm ci --prefer-offline
+    npm install
 
 COPY . .
 RUN npm run build
