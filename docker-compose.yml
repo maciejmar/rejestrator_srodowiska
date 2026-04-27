@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
 
   # ── PostgreSQL ────────────────────────────────────────────────────────────
   db:
-    image: postgres:16-alpine
+    image: repo.bank.com.pl/zrai-docker-remote-dev/postgres:16
     container_name: portal-ai-db
     restart: unless-stopped
     environment:
@@ -22,12 +20,14 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      secrets:
+        - pip_conf
     container_name: portal-ai-api
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://portalai:portalai@db:5432/portalai
     ports:
-      - "127.0.0.1:8004:8000"
+      - "10.112.32.19:8004:8000"
     depends_on:
       - db
     networks:
@@ -38,10 +38,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
+      secrets:
+        - ca_cert
     container_name: portal-ai-rezerwacje
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8002:80"
+      - "10.112.32.19:8002:80"
 
 volumes:
   pg_data:
@@ -50,3 +53,9 @@ networks:
   internal:
     # Sieć wewnętrzna: frontend nie ma bezpośredniego dostępu do DB
     driver: bridge
+
+secrets:
+  pip_conf:
+    file: /etc/pip.conf
+  ca_cert:
+    file: /etc/pki/ca-trust/source/anchors/bank-jfrog-ca.crt
