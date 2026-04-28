@@ -234,7 +234,7 @@
               <span class="rank-name">{{ item.model.name }}</span>
               <div class="rank-bar">
                 <div class="rank-bar__fill"
-                  [style.width.%]="(item.count / (topModels()[0]?.count || 1)) * 100"></div>
+                  [style.width.%]="(item.count / (topModels()[0].count || 1)) * 100"></div>
               </div>
             </div>
             <span class="rank-count">{{ item.count }}</span>

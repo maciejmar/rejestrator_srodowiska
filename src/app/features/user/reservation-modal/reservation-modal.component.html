@@ -150,7 +150,7 @@
           </svg>
           <div>
             <strong>Cały dzień zarezerwowany</strong>
-            przez {{ existingReservations[0]?.userName }} ({{ existingReservations[0]?.department }})
+            przez {{ existingReservations[0].userName }} ({{ existingReservations[0].department }})
             <span *ngIf="auth.isAdmin"> — anuluj powyżej, aby odblokować.</span>
           </div>
         </div>
