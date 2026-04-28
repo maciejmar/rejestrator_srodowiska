@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { forkJoin, Observable } from 'rxjs';
 import { Reservation } from '../../core/models/reservation.model';
 import { AIModel } from '../../core/models/ai-model.model';
@@ -20,6 +21,8 @@ export class AdminComponent implements OnInit {
   searchQuery   = '';
   stats = { total: 0, confirmed: 0, today: 0, byModel: {} as Record<string, number> };
   loading = false;
+  syncing = false;
+  syncResult: number | null = null;
 
   rescheduleTarget: Reservation | null = null;
 
@@ -42,7 +45,8 @@ export class AdminComponent implements OnInit {
     private reservationService: ReservationService,
     private modelService: ModelService,
     public auth: AuthService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private http: HttpClient
   ) {
     this.newForm = this.fb.group({
       modelId:    ['', Validators.required],
@@ -67,7 +71,7 @@ export class AdminComponent implements OnInit {
     }).catch(() => { this.loading = false; });
 
     this.reservationService.getStats().subscribe({
-      next: (s) => {
+      next: (s: { total: number; confirmed: number; today: number; by_model: Record<string, number> }) => {
         this.stats = {
           total:     s.total,
           confirmed: s.confirmed,
@@ -200,6 +204,19 @@ export class AdminComponent implements OnInit {
         setTimeout(() => { this.resetNewForm(); this.showNewForm = false; this.refresh(); }, 1600);
       },
       error: () => { this.newSaving = false; }
+    });
+  }
+
+  syncModels(): void {
+    this.syncing = true;
+    this.syncResult = null;
+    this.http.post<{ synced: number }>('/rezerwacje/api/admin/sync-models', {}).subscribe({
+      next: (r: { synced: number }) => {
+        this.syncing    = false;
+        this.syncResult = r.synced;
+        this.refresh();
+      },
+      error: () => { this.syncing = false; }
     });
   }
 

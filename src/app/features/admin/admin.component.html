@@ -6,6 +6,13 @@
       <h1 class="admin__title">Panel administratora</h1>
       <p class="admin__sub">Zalogowany jako <strong>{{ auth.currentUser?.displayName }}</strong> · {{ auth.currentUser?.email }}</p>
     </div>
+    <button class="btn btn--secondary" (click)="syncModels()" [disabled]="syncing" style="margin-right:8px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+      {{ syncing ? 'Synchronizacja...' : syncResult ? ('Zsynchronizowano: ' + syncResult) : 'Sync modeli' }}
+    </button>
     <button class="btn btn--primary" (click)="toggleNewForm()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <line x1="12" y1="5" x2="12" y2="19"></line>
