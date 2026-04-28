@@ -23,7 +23,7 @@ class AIModelStatusUpdate(BaseModel):
 
 class ReservationCreate(BaseModel):
     model_id:   str
-    user_email: str
+    user_email: Optional[str] = None
     user_name:  str
     department: str
     date:       date

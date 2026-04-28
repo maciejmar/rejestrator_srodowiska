@@ -181,16 +181,18 @@ export class AdminComponent implements OnInit {
 
     let requests: Observable<Reservation>[];
 
+    const userEmail = this.auth.currentUser?.email ?? '';
+
     if (this.newMode === 'full-day') {
       requests = [this.reservationService.addReservation({
-        modelId, date, userName, department, purpose, isFullDay: true
+        modelId, date, userEmail, userName, department, purpose, isFullDay: true
       })];
     } else {
       requests = this.newSelectedSlots.map(time => {
         const [h, m] = time.split(':').map(Number);
         const endTime = `${String(h + 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         return this.reservationService.addReservation({
-          modelId, date, userName, department, purpose,
+          modelId, date, userEmail, userName, department, purpose,
           isFullDay: false, startTime: time, endTime
         });
       });

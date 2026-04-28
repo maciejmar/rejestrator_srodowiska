@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { Reservation } from '../models/reservation.model';
+import { tap, map } from 'rxjs/operators';
+import { Reservation, ReservationStatus } from '../models/reservation.model';
 import { environment } from '../../../environments/environment';
 
 const API = environment.apiUrl;
@@ -19,10 +19,10 @@ export class ReservationService {
   loadForModel(modelId: string): Promise<void> {
     this.currentModelId = modelId;
     return firstValueFrom(
-      this.http.get<Reservation[]>(`${API}/reservations`, {
+      this.http.get<Record<string, unknown>[]>(`${API}/reservations`, {
         params: new HttpParams().set('model_id', modelId)
       }).pipe(
-        tap((list: Reservation[]) => this.reservationsSubject.next(list))
+        tap((list: Record<string, unknown>[]) => this.reservationsSubject.next(list.map((r: Record<string, unknown>) => this.fromApi(r))))
       )
     ).then(() => void 0);
   }
@@ -30,8 +30,8 @@ export class ReservationService {
   loadAll(): Promise<void> {
     this.currentModelId = null;
     return firstValueFrom(
-      this.http.get<Reservation[]>(`${API}/reservations`).pipe(
-        tap((list: Reservation[]) => this.reservationsSubject.next(list))
+      this.http.get<Record<string, unknown>[]>(`${API}/reservations`).pipe(
+        tap((list: Record<string, unknown>[]) => this.reservationsSubject.next(list.map((r: Record<string, unknown>) => this.fromApi(r))))
       )
     ).then(() => void 0);
   }
@@ -56,17 +56,20 @@ export class ReservationService {
 
   addReservation(data: Omit<Reservation, 'id' | 'createdAt' | 'status'>): Observable<Reservation> {
     const body = this.toSnakeCase(data as Record<string, unknown>);
-    return this.http.post<Reservation>(`${API}/reservations`, body).pipe(
+    return this.http.post<Record<string, unknown>>(`${API}/reservations`, body).pipe(
+      map((r: Record<string, unknown>) => this.fromApi(r)),
       tap((created: Reservation) => {
-        const list = [...this.reservationsSubject.value, created];
-        this.reservationsSubject.next(list);
+        this.reservationsSubject.next([...this.reservationsSubject.value, created]);
       })
     );
   }
 
-  cancelReservation(id: string): Observable<Reservation> {
-    return this.http.delete<Reservation>(`${API}/reservations/${id}`).pipe(
-      tap((updated: Reservation) => this.replaceInCache(updated))
+  cancelReservation(id: string): Observable<void> {
+    return this.http.delete<void>(`${API}/reservations/${id}`).pipe(
+      tap(() => {
+        const list = this.reservationsSubject.value.filter((r: Reservation) => r.id !== id);
+        this.reservationsSubject.next(list);
+      })
     );
   }
 
@@ -75,7 +78,8 @@ export class ReservationService {
     changes: Partial<Pick<Reservation, 'date' | 'isFullDay' | 'startTime' | 'endTime'>>
   ): Observable<Reservation> {
     const body = this.toSnakeCase(changes as Record<string, unknown>);
-    return this.http.patch<Reservation>(`${API}/reservations/${id}`, body).pipe(
+    return this.http.patch<Record<string, unknown>>(`${API}/reservations/${id}`, body).pipe(
+      map((r: Record<string, unknown>) => this.fromApi(r)),
       tap((updated: Reservation) => this.replaceInCache(updated))
     );
   }
@@ -84,6 +88,23 @@ export class ReservationService {
     return this.http.get<{ total: number; confirmed: number; today: number; by_model: Record<string, number> }>(
       `${API}/reservations/stats/summary`
     );
+  }
+
+  private fromApi(r: Record<string, unknown>): Reservation {
+    return {
+      id:         r['id'] as string,
+      modelId:    r['model_id'] as string,
+      userEmail:  r['user_email'] as string,
+      userName:   r['user_name'] as string,
+      department: r['department'] as string,
+      date:       r['date'] as string,
+      isFullDay:  r['is_full_day'] as boolean,
+      startTime:  r['start_time'] as string | undefined,
+      endTime:    r['end_time'] as string | undefined,
+      purpose:    r['purpose'] as string,
+      status:     r['status'] as ReservationStatus,
+      createdAt:  r['created_at'] as string,
+    };
   }
 
   private replaceInCache(updated: Reservation): void {

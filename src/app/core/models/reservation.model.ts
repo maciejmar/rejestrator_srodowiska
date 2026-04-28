@@ -3,6 +3,7 @@ export type ReservationStatus = 'confirmed' | 'pending' | 'cancelled';
 export interface Reservation {
   id: string;
   modelId: string;
+  userEmail: string;
   userName: string;
   department: string;
   date: string;         // YYYY-MM-DD

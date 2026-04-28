@@ -128,10 +128,12 @@ export class ReservationModalComponent implements OnInit {
 
     let requests: Observable<Reservation>[];
 
+    const userEmail = this.auth.currentUser?.email ?? '';
+
     if (this.mode === 'full-day') {
       requests = [this.reservationService.addReservation({
         modelId: this.model.id,
-        userName, department, purpose,
+        userEmail, userName, department, purpose,
         date: this.day.dateStr,
         isFullDay: true
       })];
@@ -139,7 +141,7 @@ export class ReservationModalComponent implements OnInit {
       requests = this.selectedSlots.map(slot =>
         this.reservationService.addReservation({
           modelId: this.model.id,
-          userName, department, purpose,
+          userEmail, userName, department, purpose,
           date: this.day.dateStr,
           isFullDay: false,
           startTime: slot.time,
