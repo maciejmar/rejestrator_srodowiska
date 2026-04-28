@@ -10,7 +10,7 @@ import { Component } from '@angular/core';
   `,
   styles: [`
     :host { display: flex; flex-direction: column; height: 100vh; }
-    .main-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .main-content { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
   `]
 })
 export class AppComponent {}
