@@ -92,7 +92,18 @@ export class ReservationModalComponent implements OnInit {
     return this.selectedSlots.length > 0;
   }
 
+  canCancelReservation(r: Reservation): boolean {
+    if (this.auth.isAdmin) return true;
+    return r.userEmail === this.auth.currentUser?.email;
+  }
+
+  get hasAnyCancellable(): boolean {
+    return this.existingReservations.some(r => this.canCancelReservation(r));
+  }
+
   cancelExisting(r: Reservation): void {
+    const label = r.isFullDay ? 'cały dzień' : r.startTime;
+    if (!confirm(`Anulować rezerwację (${label})?`)) return;
     this.reservationService.cancelReservation(r.id).subscribe({
       next: () => this.loadData(),
       error: () => this.loadData()

@@ -59,11 +59,11 @@
 
       <div class="modal__body">
 
-        <!-- Existing reservations (admin can cancel them) -->
+        <!-- Existing reservations -->
         <div *ngIf="existingReservations.length > 0" class="existing-section">
           <div class="existing-section__title">
             Bieżące rezerwacje
-            <span class="existing-section__hint" *ngIf="!auth.isAdmin">(tylko odczyt)</span>
+            <span class="existing-section__hint" *ngIf="!hasAnyCancellable">(tylko odczyt)</span>
           </div>
           <div class="existing-list">
             <div class="existing-item" *ngFor="let r of existingReservations">
@@ -73,10 +73,10 @@
               <div class="existing-item__user">{{ r.userName }}</div>
               <div class="existing-item__dept">{{ r.department }}</div>
               <button
-                *ngIf="auth.isAdmin"
+                *ngIf="canCancelReservation(r)"
                 class="cancel-btn"
                 (click)="cancelExisting(r)"
-                title="Anuluj rezerwację"
+                title="Odwołaj rezerwację"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -151,7 +151,7 @@
           <div>
             <strong>Cały dzień zarezerwowany</strong>
             przez {{ existingReservations[0].userName }} ({{ existingReservations[0].department }})
-            <span *ngIf="auth.isAdmin"> — anuluj powyżej, aby odblokować.</span>
+            <span *ngIf="hasAnyCancellable"> — anuluj powyżej, aby odblokować.</span>
           </div>
         </div>
 
