@@ -55,6 +55,6 @@ export const environment = {
      * URL portalu do przekierowania gdy user NIE jest zalogowany.
      * Aplikacja przekieruje tutaj zamiast pokazywać własny formularz logowania.
      */
-    portalLoginUrl: 'http://portal-ai.bank.com.pl/login'
+    portalLoginUrl: '/portal/login'
   }
 };

@@ -9,6 +9,6 @@ export const environment = {
     cookieName: null as string | null,
     adminGroups: ['ai-admins', 'ai-portal-admins', 'portal-ai-admin', 'ai-administrators'],
     adminEmails: ['admin@bgk.pl', 'it.admin@bgk.pl', 'superadmin@bgk.pl'],
-    portalLoginUrl: 'http://portal-ai.bank.com.pl/login'
+    portalLoginUrl: '/portal/login'
   }
 };
