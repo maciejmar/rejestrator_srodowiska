@@ -26,8 +26,9 @@ services:
     container_name: portal-ai-api
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://portalai:portalai@db:5432/portalai
-      OLLAMA_URL:   http://10.112.32.19:11437
+      DATABASE_URL:    postgresql://portalai:portalai@db:5432/portalai
+      OLLAMA_URL:      http://10.112.32.19:11437
+      LLM_GATEWAY_URL: http://10.112.32.19:6666
     ports:
       - "10.112.32.19:8004:8000"
     depends_on:
